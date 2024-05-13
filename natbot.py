@@ -8,8 +8,10 @@
 from playwright.sync_api import sync_playwright
 import time
 from sys import argv, exit, platform
-import openai
+from openai import OpenAI
 import os
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 quiet = False
 if len(argv) >= 2:
@@ -202,7 +204,7 @@ class Crawler:
 		if element:
 			x = element.get("center_x")
 			y = element.get("center_y")
-			
+
 			self.page.mouse.click(x, y)
 		else:
 			print("Could not find element")
@@ -430,7 +432,7 @@ class Crawler:
 					element_attributes.pop(
 						"type", None
 					)  # prevent [button ... (button)..]
-				
+
 				for key in element_attributes:
 					if ancestor_exception:
 						ancestor_node.append({
@@ -493,7 +495,7 @@ class Crawler:
 
 			inner_text = f"{node_value} " if node_value else ""
 			meta = ""
-			
+
 			if node_index in child_nodes:
 				for child in child_nodes.get(node_index):
 					entry_type = child.get('type')
@@ -543,7 +545,6 @@ if (
 	__name__ == "__main__"
 ):
 	_crawler = Crawler()
-	openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 	def print_help():
 		print(
@@ -557,7 +558,7 @@ if (
 		prompt = prompt.replace("$url", url[:100])
 		prompt = prompt.replace("$previous_command", previous_command)
 		prompt = prompt.replace("$browser_content", browser_content[:4500])
-		response = openai.Completion.create(model="text-davinci-002", prompt=prompt, temperature=0.5, best_of=10, n=3, max_tokens=50)
+		response = client.completions.create(model="gpt-3.5-turbo-instruct", prompt=prompt, temperature=0.5, best_of=10, n=3, max_tokens=50)
 		return response.choices[0].text
 
 	def run_cmd(cmd):
